@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Calculadora de Horas Extra</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+
+        .container {
+            max-width: 100%;
+            background: white;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 20px 25px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 13px;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            position: sticky;
+            top: 88px;
+            z-index: 99;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: #f8f9fa;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="time"],
+        input[type="number"],
+        input[type="date"],
+        input[type="email"],
+        select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .periodo-container {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .periodo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .periodo-title {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 15px;
+        }
+
+        .btn-eliminar-periodo {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .tiempo-grupo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .tiempo-item label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin-top: 12px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .checkbox-label span {
+            font-size: 13px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #48dbfb;
+            color: white;
+        }
+
+        .btn-secondary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-success {
+            background: #1dd1a1;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #feca57;
+            color: #333;
+        }
+
+        .resultado {
+            background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .resultado h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .resultado .horas-extra {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .resultado .detalles {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .alerta {
+            background: #ff4757;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .filtro-empleados {
+            margin-bottom: 20px;
+        }
+
+        .empleado-card {
+            background: white;
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .empleado-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .empleado-nombre {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .empleado-total {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1dd1a1;
+        }
+
+        .empleado-registros {
+            margin-top: 12px;
+        }
+
+        .registro-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .registro-fecha {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .registro-info {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .registro-horas {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1dd1a1;
+            margin-top: 5px;
+        }
+
+        .registro-periodos {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .btn-eliminar-registro {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            margin-top: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: #1565c0;
+            line-height: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state-text {
+            font-size: 15px;
+        }
+
+        .sumatorio-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sumatorio-title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .sumatorio-total {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .sumatorio-detalles {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .fecha-filtro {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-clear-filtro {
+            background: #f1f2f6;
+            color: #666;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .toggle-registros {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .registros-collapsed {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Horas Extra</h1>
+            <p>Gestiona las horas de tus empleados</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab('calcular')">➕ Calcular</button>
+            <button class="tab" onclick="cambiarTab('historial')">📊 Historial</button>
+            <button class="tab" onclick="cambiarTab('ajustes')">⚙️ Ajustes</button>
+        </div>
+
+        <!-- TAB CALCULAR -->
+        <div id="tab-calcular" class="tab-content active">
+            <div class="info-box">
+                💡 Introduce el nombre del empleado, horas contractuales y periodos trabajados
+            </div>
+
+            <div class="form-group">
+                <label for="nombreEmpleado">👤 Nombre del Empleado</label>
+                <input type="text" id="nombreEmpleado" placeholder="Ej: María García" list="empleados-list" onchange="cargarPrecioEmpleado()">
+                <datalist id="empleados-list"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="fechaTrabajo">📅 Fecha del Trabajo</label>
+                <input type="date" id="fechaTrabajo">
+            </div>
+
+            <div class="form-group">
+                <label for="precioHoraExtra">💰 Precio por Hora Extra de este Empleado</label>
+                <input type="number" id="precioHoraExtra" placeholder="Ej: 15.50" step="0.01" min="0">
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                    💡 Se guardará automáticamente para este empleado
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📋 Horas Contractuales</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <input type="number" id="horasContractuales" placeholder="Horas" min="0" max="23" value="7">
+                    </div>
+                    <div>
+                        <input type="number" id="minutosContractuales" placeholder="Minutos" min="0" max="59" value="15">
+                    </div>
+                </div>
+            </div>
+
+            <div id="periodosContainer"></div>
+
+            <button class="btn btn-secondary" onclick="agregarPeriodo()">➕ Añadir Periodo</button>
+            <button class="btn btn-primary" onclick="calcularHorasExtra()">🧮 Calcular Horas Extra</button>
+            <button class="btn btn-success" onclick="guardarCalculo()">💾 Guardar en Historial</button>
+            <button class="btn btn-warning" onclick="limpiarFormulario()">🔄 Nuevo Cálculo</button>
+
+            <div id="alerta" class="alerta"></div>
+
+            <div id="resultado" class="resultado">
+                <h2>Resultado del Cálculo</h2>
+                <div class="horas-extra" id="horasExtraResultado">0h 0min</div>
+                <div class="detalles" id="detallesResultado"></div>
+            </div>
+        </div>
+
+        <!-- TAB HISTORIAL -->
+        <div id="tab-historial" class="tab-content">
+            <div class="form-group filtro-empleados">
+                <label for="filtroEmpleado">👤 Filtrar por Empleado</label>
+                <select id="filtroEmpleado" onchange="filtrarHistorial()">
+                    <option value="">Todos los empleados</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📅 Filtrar por Fecha</label>
+                <div class="fecha-filtro">
+                    <input type="date" id="fechaDesde" onchange="filtrarHistorial()" placeholder="Desde">
+                    <input type="date" id="fechaHasta" onchange="filtrarHistorial()" placeholder="Hasta">
+                </div>
+                <button class="btn-clear-filtro" onclick="limpiarFiltros()">🔄 Limpiar Filtros</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="enviarEmailGestoria()" style="font-size: 14px; padding: 12px;">
+                    📧 Enviar a Gestoría
+                </button>
+                <button class="btn" onclick="enviarEmailPersonal()" style="font-size: 14px; padding: 12px; background: #48dbfb; color: white;">
+                    ✉️ Enviarme Copia
+                </button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-warning" onclick="mostrarOpcionesBorrado()" style="font-size: 14px; padding: 12px; background: #ff4757; color: white;">
+                    🗑️ Borrar Registros
+                </button>
+            </div>
+
+            <div id="opcionesBorrado" style="display: none; background: #fff3cd; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ffc107;">
+                <div style="font-weight: 600; margin-bottom: 12px; color: #856404;">⚠️ Borrar Registros</div>
+                <button class="btn" onclick="borrarEmpleadoSeleccionado()" style="background: #ff6b6b; color: white; font-size: 14px; padding: 12px; margin-bottom: 8px;">
+                    🗑️ Borrar empleado seleccionado
+                </button>
+                <button class="btn" onclick="borrarTodosRegistros()" style="background: #ee5a6f; color: white; font-size: 14px; padding: 12px; margin-bottom: 8px;">
+                    🗑️ Borrar TODOS los registros
+                </button>
+                <button class="btn-clear-filtro" onclick="ocultarOpcionesBorrado()" style="width: 100%;">
+                    ❌ Cancelar
+                </button>
+            </div>
+
+            <div id="sumatorioContainer"></div>
+            <div id="historialContainer"></div>
+        </div>
+
+        <!-- TAB AJUSTES -->
+        <div id="tab-ajustes" class="tab-content">
+            <div class="info-box">
+                ⚙️ Configura las opciones de la aplicación
+            </div>
+
+            <div class="form-group">
+                <label style="font-size: 18px; margin-bottom: 15px;">📧 Configuración de Emails</label>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <label for="emailGestoria">📮 Email de la Gestoría</label>
+                    <input type="email" id="emailGestoria" placeholder="gestoria@ejemplo.com" value="javier@contaglobal.com" onchange="guardarEmailGestoria()">
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        💡 A este email se enviarán los informes de horas extra
+                    </div>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                    <label for="emailPersonal">✉️ Mi Email Personal (opcional)</label>
+                    <input type="email" id="emailPersonal" placeholder="tu@email.com" value="tuska56@hotmail.com" onchange="guardarEmailPersonal()">
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        💡 Puedes enviarte copias de prueba o informes a ti mismo
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 30px;">
+                <label style="font-size: 18px; margin-bottom: 15px;">💰 Gestión de Precios por Empleado</label>
+                
+                <div id="preciosEmpleados" style="background: #f8f9fa; padding: 15px; border-radius: 12px;">
+                    <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                        Los precios se guardan automáticamente al calcular. Aquí puedes editarlos:
+                    </div>
+                    <div id="listaPreciosEmpleados"></div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 30px;">
+                <label style="font-size: 18px; margin-bottom: 15px; color: #ff4757;">⚠️ Zona de Peligro</label>
+                
+                <button class="btn" onclick="exportarDatos()" style="background: #48dbfb; color: white; margin-bottom: 10px;">
+                    💾 Exportar Datos (Backup)
+                </button>
+                
+                <button class="btn" onclick="borrarTodosDatos()" style="background: #ff4757; color: white;">
+                    🗑️ Borrar Todos los Datos de la App
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let contadorPeriodos = 0;
+        let ultimoCalculo = null;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                document.getElementById('fechaTrabajo').valueAsDate = new Date();
+                agregarPeriodo();
+                agregarPeriodo();
+                cargarHistorial();
+                actualizarListaEmpleados();
+            } catch(e) {
+                console.error('Error inicialización:', e);
+            }
+        });
+
+        function cambiarTab(tab) {
+            try {
+                document.querySelectorAll('.tab').forEach(function(t) {
+                    t.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(function(c) {
+                    c.classList.remove('active');
+                });
+                
+                if (tab === 'calcular') {
+                    document.querySelectorAll('.tab')[0].classList.add('active');
+                    document.getElementById('tab-calcular').classList.add('active');
+                } else if (tab === 'historial') {
+                    document.querySelectorAll('.tab')[1].classList.add('active');
+                    document.getElementById('tab-historial').classList.add('active');
+                    cargarHistorial();
+                } else if (tab === 'ajustes') {
+                    document.querySelectorAll('.tab')[2].classList.add('active');
+                    document.getElementById('tab-ajustes').classList.add('active');
+                    cargarAjustes();
+                }
+            } catch(e) {
+                console.error('Error cambiar tab:', e);
+            }
+        }
+
+        function agregarPeriodo() {
+            try {
+                contadorPeriodos++;
+                var container = document.getElementById('periodosContainer');
+                var periodoDiv = document.createElement('div');
+                periodoDiv.className = 'periodo-container';
+                periodoDiv.id = 'periodo' + contadorPeriodos;
+                
+                var eliminarBtn = '';
+                if (contadorPeriodos > 2) {
+                    eliminarBtn = '<button class="btn-eliminar-periodo" onclick="eliminarPeriodo(' + contadorPeriodos + ')">❌</button>';
+                }
+                
+                periodoDiv.innerHTML = '<div class="periodo-header">' +
+                    '<div class="periodo-title">📅 Periodo ' + contadorPeriodos + '</div>' +
+                    eliminarBtn +
+                    '</div>' +
+                    '<div class="tiempo-grupo">' +
+                    '<div class="tiempo-item">' +
+                    '<label>⏰ Inicio</label>' +
+                    '<input type="time" id="inicio' + contadorPeriodos + '" required>' +
+                    '</div>' +
+                    '<div class="tiempo-item">' +
+                    '<label>⏰ Fin</label>' +
+                    '<input type="time" id="fin' + contadorPeriodos + '" required>' +
+                    '</div>' +
+                    '</div>' +
+                    '<label class="checkbox-label">' +
+                    '<input type="checkbox" id="diaSiguiente' + contadorPeriodos + '">' +
+                    '<span>Termina al día siguiente</span>' +
+                    '</label>';
+                
+                container.appendChild(periodoDiv);
+            } catch(e) {
+                console.error('Error agregar periodo:', e);
+            }
+        }
+
+        function eliminarPeriodo(id) {
+            try {
+                var periodo = document.getElementById('periodo' + id);
+                if (periodo) {
+                    periodo.remove();
+                }
+            } catch(e) {
+                console.error('Error eliminar periodo:', e);
+            }
+        }
+
+        function calcularMinutosTrabajados(inicio, fin, esDiaSiguiente) {
+            try {
+                var partes1 = inicio.split(':');
+                var horasInicio = parseInt(partes1[0]);
+                var minutosInicio = parseInt(partes1[1]);
+                
+                var partes2 = fin.split(':');
+                var horasFin = parseInt(partes2[0]);
+                var minutosFin = parseInt(partes2[1]);
+                
+                var minutosInicio2 = horasInicio * 60 + minutosInicio;
+                var minutosFin2 = horasFin * 60 + minutosFin;
+                
+                if (esDiaSiguiente) {
+                    minutosFin2 += 24 * 60;
+                }
+                
+                var diferencia = minutosFin2 - minutosInicio2;
+                
+                if (diferencia < 0) {
+                    return -1;
+                }
+                
+                return diferencia;
+            } catch(e) {
+                console.error('Error calcular minutos:', e);
+                return -1;
+            }
+        }
+
+        function calcularHorasExtra() {
+            try {
+                var nombreEmpleado = document.getElementById('nombreEmpleado').value.trim();
+                var fechaTrabajo = document.getElementById('fechaTrabajo').value;
+                var horasContractuales = parseInt(document.getElementById('horasContractuales').value) || 0;
+                var minutosContractuales = parseInt(document.getElementById('minutosContractuales').value) || 0;
+                var precioHoraExtra = parseFloat(document.getElementById('precioHoraExtra').value) || 0;
+                
+                if (!nombreEmpleado) {
+                    mostrarAlerta('❌ Por favor, introduce el nombre del empleado');
+                    return;
+                }
+
+                if (!fechaTrabajo) {
+                    mostrarAlerta('❌ Por favor, selecciona la fecha del trabajo');
+                    return;
+                }
+                
+                var minutosContractualesTotal = horasContractuales * 60 + minutosContractuales;
+                
+                if (minutosContractualesTotal === 0) {
+                    mostrarAlerta('❌ Las horas contractuales deben ser mayor a 0');
+                    return;
+                }
+                
+                var totalMinutosTrabajados = 0;
+                var periodosTrabajados = [];
+                var hayError = false;
+                
+                var periodos = document.querySelectorAll('.periodo-container');
+                periodos.forEach(function(periodo) {
+                    var id = periodo.id.replace('periodo', '');
+                    var inicioEl = document.getElementById('inicio' + id);
+                    var finEl = document.getElementById('fin' + id);
+                    var diaSiguienteEl = document.getElementById('diaSiguiente' + id);
+                    
+                    var inicio = inicioEl ? inicioEl.value : '';
+                    var fin = finEl ? finEl.value : '';
+                    var diaSiguiente = diaSiguienteEl ? diaSiguienteEl.checked : false;
+                    
+                    if (inicio && fin) {
+                        var minutos = calcularMinutosTrabajados(inicio, fin, diaSiguiente);
+                        
+                        if (minutos < 0) {
+                            mostrarAlerta('❌ Error en Periodo ' + id + ': La hora de fin debe ser posterior a la de inicio.');
+                            hayError = true;
+                            return;
+                        }
+                        
+                        totalMinutosTrabajados += minutos;
+                        periodosTrabajados.push({
+                            inicio: inicio,
+                            fin: fin,
+                            diaSiguiente: diaSiguiente,
+                            minutos: minutos
+                        });
+                    }
+                });
+                
+                if (hayError) return;
+                
+                if (periodosTrabajados.length === 0) {
+                    mostrarAlerta('❌ Introduce al menos un periodo de trabajo');
+                    return;
+                }
+                
+                var minutosExtra = totalMinutosTrabajados - minutosContractualesTotal;
+                
+                var horasExtra = Math.floor(Math.abs(minutosExtra) / 60);
+                var minutosExtraRestantes = Math.abs(minutosExtra) % 60;
+                
+                var horasTrabajadas = Math.floor(totalMinutosTrabajados / 60);
+                var minutosTrabajadosRestantes = totalMinutosTrabajados % 60;
+                
+                // Calcular importe si hay precio
+                var importeTotal = 0;
+                if (precioHoraExtra > 0 && minutosExtra > 0) {
+                    var horasExtraDecimal = minutosExtra / 60;
+                    importeTotal = horasExtraDecimal * precioHoraExtra;
+                    
+                    // Guardar el precio para este empleado
+                    guardarPrecioEmpleado(nombreEmpleado, precioHoraExtra);
+                }
+                
+                var resultadoDiv = document.getElementById('resultado');
+                var horasExtraDiv = document.getElementById('horasExtraResultado');
+                var detallesDiv = document.getElementById('detallesResultado');
+                
+                if (minutosExtra > 0) {
+                    horasExtraDiv.textContent = horasExtra + 'h ' + minutosExtraRestantes + 'min';
+                    resultadoDiv.style.background = 'linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%)';
+                } else if (minutosExtra < 0) {
+                    horasExtraDiv.textContent = '0h 0min';
+                    resultadoDiv.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)';
+                } else {
+                    horasExtraDiv.textContent = '0h 0min';
+                    resultadoDiv.style.background = 'linear-gradient(135deg, #48dbfb 0%, #0abde3 100%)';
+                }
+                
+                var fechaObj = new Date(fechaTrabajo + 'T00:00:00');
+                var fechaFormateada = fechaObj.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                
+                var importeHTML = '';
+                if (importeTotal > 0) {
+                    importeHTML = '<strong style="font-size: 16px;">💶 Total a pagar: ' + importeTotal.toFixed(2) + '€</strong><br>';
+                }
+                
+                var avisoHTML = '';
+                if (minutosExtra < 0) {
+                    avisoHTML = '<strong style="color: #ffe66d;">⚠️ Trabajó menos de lo contractual</strong>';
+                }
+                
+                detallesDiv.innerHTML = '<strong>' + nombreEmpleado + '</strong><br>' +
+                    '📅 ' + fechaFormateada + '<br>' +
+                    'Contractual: ' + horasContractuales + 'h ' + minutosContractuales + 'min<br>' +
+                    'Trabajadas: ' + horasTrabajadas + 'h ' + minutosTrabajadosRestantes + 'min<br>' +
+                    importeHTML +
+                    avisoHTML;
+                
+                resultadoDiv.style.display = 'block';
+                
+                ultimoCalculo = {
+                    nombreEmpleado: nombreEmpleado,
+                    fechaTrabajo: fechaTrabajo,
+                    horasContractuales: horasContractuales,
+                    minutosContractuales: minutosContractuales,
+                    horasTrabajadas: horasTrabajadas,
+                    minutosTrabajadosRestantes: minutosTrabajadosRestantes,
+                    horasExtra: minutosExtra > 0 ? horasExtra : 0,
+                    minutosExtra: minutosExtra > 0 ? minutosExtraRestantes : 0,
+                    totalMinutosExtra: minutosExtra > 0 ? minutosExtra : 0,
+                    precioHoraExtra: precioHoraExtra,
+                    importeTotal: importeTotal,
+                    periodos: periodosTrabajados,
+                    timestamp: new Date().getTime()
+                };
+                
+                ocultarAlerta();
+            } catch(e) {
+                console.error('Error calcular horas:', e);
+                mostrarAlerta('❌ Error al calcular. Por favor revisa los datos.');
+            }
+        }
+
+        function guardarCalculo() {
+            try {
+                if (!ultimoCalculo) {
+                    mostrarAlerta('❌ Primero calcula las horas extra');
+                    return;
+                }
+                
+                var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+                historial.unshift(ultimoCalculo);
+                localStorage.setItem('historialHorasExtra', JSON.stringify(historial));
+                
+                mostrarAlerta('✅ Guardado en el historial', 'success');
+                actualizarListaEmpleados();
+                
+                setTimeout(function() {
+                    cambiarTab('historial');
+                }, 1000);
+            } catch(e) {
+                console.error('Error guardar:', e);
+                mostrarAlerta('❌ Error al guardar');
+            }
+        }
+
+        function limpiarFormulario() {
+            try {
+                document.getElementById('nombreEmpleado').value = '';
+                document.getElementById('fechaTrabajo').valueAsDate = new Date();
+                document.getElementById('horasContractuales').value = '7';
+                document.getElementById('minutosContractuales').value = '15';
+                document.getElementById('precioHoraExtra').value = '';
+                
+                var periodos = document.querySelectorAll('.periodo-container');
+                periodos.forEach(function(periodo) {
+                    var id = periodo.id.replace('periodo', '');
+                    var inicioInput = document.getElementById('inicio' + id);
+                    var finInput = document.getElementById('fin' + id);
+                    var diaSiguienteInput = document.getElementById('diaSiguiente' + id);
+                    
+                    if (inicioInput) inicioInput.value = '';
+                    if (finInput) finInput.value = '';
+                    if (diaSiguienteInput) diaSiguienteInput.checked = false;
+                });
+                
+                document.getElementById('resultado').style.display = 'none';
+                ultimoCalculo = null;
+                ocultarAlerta();
+            } catch(e) {
+                console.error('Error limpiar:', e);
+            }
+        }
+
+        function mostrarAlerta(mensaje, tipo) {
+            try {
+                tipo = tipo || 'error';
+                var alerta = document.getElementById('alerta');
+                alerta.textContent = mensaje;
+                alerta.style.display = 'block';
+                
+                if (tipo === 'success') {
+                    alerta.style.background = '#1dd1a1';
+                } else {
+                    alerta.style.background = '#ff4757';
+                }
+                
+                setTimeout(function() {
+                    ocultarAlerta();
+                }, 4000);
+            } catch(e) {
+                console.error('Error mostrar alerta:', e);
+            }
+        }
+
+        function ocultarAlerta() {
+            try {
+                document.getElementById('alerta').style.display = 'none';
+            } catch(e) {
+                console.error('Error ocultar alerta:', e);
+            }
+        }
+
+        function cargarHistorial() {
+            try {
+                filtrarHistorial();
+            } catch(e) {
+                console.error('Error cargar historial:', e);
+            }
+        }
+
+        function filtrarHistorial() {
+            try {
+                var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+                var filtroEmpleado = document.getElementById('filtroEmpleado').value;
+                var fechaDesde = document.getElementById('fechaDesde').value;
+                var fechaHasta = document.getElementById('fechaHasta').value;
+                
+                var historialFiltrado = historial;
+                
+                if (filtroEmpleado) {
+                    historialFiltrado = historialFiltrado.filter(function(item) {
+                        return item.nombreEmpleado === filtroEmpleado;
+                    });
+                }
+                
+                if (fechaDesde) {
+                    historialFiltrado = historialFiltrado.filter(function(item) {
+                        return item.fechaTrabajo >= fechaDesde;
+                    });
+                }
+                
+                if (fechaHasta) {
+                    historialFiltrado = historialFiltrado.filter(function(item) {
+                        return item.fechaTrabajo <= fechaHasta;
+                    });
+                }
+                
+                mostrarHistorialAgrupado(historialFiltrado, historial);
+                actualizarFiltroEmpleados();
+            } catch(e) {
+                console.error('Error filtrar historial:', e);
+            }
+        }
+
+        function mostrarHistorialAgrupado(historialFiltrado, historialCompleto) {
+            try {
+                var container = document.getElementById('historialContainer');
+                var sumatorioContainer = document.getElementById('sumatorioContainer');
+                
+                if (historialCompleto.length === 0) {
+                    container.innerHTML = '<div class="empty-state">' +
+                        '<div class="empty-state-icon">📭</div>' +
+                        '<div class="empty-state-text">No hay registros guardados</div>' +
+                        '</div>';
+                    sumatorioContainer.innerHTML = '';
+                    return;
+                }
+                
+                // Calcular total acumulado
+                var totalMinutosAcumulado = 0;
+                historialCompleto.forEach(function(r) {
+                    totalMinutosAcumulado += r.totalMinutosExtra;
+                });
+                
+                var horasAcumuladas = Math.floor(totalMinutosAcumulado / 60);
+                var minutosAcumulados = totalMinutosAcumulado % 60;
+                
+                var filtroEmpleado = document.getElementById('filtroEmpleado').value;
+                var fechaDesde = document.getElementById('fechaDesde').value;
+                var fechaHasta = document.getElementById('fechaHasta').value;
+                var hayFiltrosActivos = filtroEmpleado || fechaDesde || fechaHasta;
+                
+                // Sumatorio total acumulado
+                var sumatorioHTML = '<div class="sumatorio-box">' +
+                    '<div class="sumatorio-title">💎 Total Acumulado (Todos los registros)</div>' +
+                    '<div class="sumatorio-total">' + horasAcumuladas + 'h ' + minutosAcumulados + 'min</div>' +
+                    '<div class="sumatorio-detalles">' +
+                    historialCompleto.length + ' registro' + (historialCompleto.length !== 1 ? 's' : '') + ' guardado' + (historialCompleto.length !== 1 ? 's' : '') +
+                    '</div>' +
+                    '</div>';
+                
+                // Si hay filtros y registros filtrados
+                if (hayFiltrosActivos && historialFiltrado.length > 0) {
+                    var totalMinutosFiltrado = 0;
+                    historialFiltrado.forEach(function(r) {
+                        totalMinutosFiltrado += r.totalMinutosExtra;
+                    });
+                    
+                    var horasFiltradas = Math.floor(totalMinutosFiltrado / 60);
+                    var minutosFiltrados = totalMinutosFiltrado % 60;
+                    
+                    var tituloFiltro = '📊 Total del Periodo Seleccionado';
+                    
+                    sumatorioHTML += '<div class="sumatorio-box" style="background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%); margin-top: 15px;">' +
+                        '<div class="sumatorio-title">' + tituloFiltro + '</div>' +
+                        '<div class="sumatorio-total">' + horasFiltradas + 'h ' + minutosFiltrados + 'min</div>' +
+                        '<div class="sumatorio-detalles">' +
+                        historialFiltrado.length + ' registro' + (historialFiltrado.length !== 1 ? 's' : '') + ' en este periodo' +
+                        '</div>' +
+                        '</div>';
+                }
+                
+                sumatorioContainer.innerHTML = sumatorioHTML;
+                
+                // Mostrar registros
+                if (historialFiltrado.length === 0) {
+                    container.innerHTML = '<div class="empty-state">' +
+                        '<div class="empty-state-icon">🔍</div>' +
+                        '<div class="empty-state-text">No hay registros con estos filtros</div>' +
+                        '</div>';
+                    return;
+                }
+                
+                // Agrupar por empleado
+                var empleados = {};
+                historialFiltrado.forEach(function(item) {
+                    if (!empleados[item.nombreEmpleado]) {
+                        empleados[item.nombreEmpleado] = [];
+                    }
+                    empleados[item.nombreEmpleado].push(item);
+                });
+                
+                container.innerHTML = '';
+                
+                var nombresEmpleados = Object.keys(empleados).sort();
+                nombresEmpleados.forEach(function(nombreEmpleado) {
+                    var registros = empleados[nombreEmpleado];
+                    var totalMinutosEmpleado = 0;
+                    registros.forEach(function(r) {
+                        totalMinutosEmpleado += r.totalMinutosExtra;
+                    });
+                    
+                    var horasTotales = Math.floor(totalMinutosEmpleado / 60);
+                    var minutosTotales = totalMinutosEmpleado % 60;
+                    
+                    var importeTotalEmpleado = 0;
+                    registros.forEach(function(r) {
+                        importeTotalEmpleado += (r.importeTotal || 0);
+                    });
+                    
+                    var empleadoCard = document.createElement('div');
+                    empleadoCard.className = 'empleado-card';
+                    
+                    var registrosId = 'registros-' + nombreEmpleado.replace(/\s/g, '-');
+                    
+                    var importeEmpleadoHTML = '';
+                    if (importeTotalEmpleado > 0) {
+                        importeEmpleadoHTML = '<div style="font-size: 14px; color: #10ac84; font-weight: 600; margin-top: 3px;">' +
+                            importeTotalEmpleado.toFixed(2) + '€</div>';
+                    }
+                    
+                    var registrosHTML = '';
+                    registros.forEach(function(item) {
+                        var fechaObj = new Date(item.fechaTrabajo + 'T00:00:00');
+                        var fechaFormateada = fechaObj.toLocaleDateString('es-ES', {
+                            weekday: 'short',
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                        
+                        var periodosTexto = item.periodos.map(function(p) {
+                            return p.inicio + '-' + p.fin + (p.diaSiguiente ? '(+1)' : '');
+                        }).join(', ');
+                        
+                        var indexOriginal = -1;
+                        for (var i = 0; i < historialCompleto.length; i++) {
+                            if (historialCompleto[i].timestamp === item.timestamp) {
+                                indexOriginal = i;
+                                break;
+                            }
+                        }
+                        
+                        var importeItemHTML = '';
+                        if (item.importeTotal > 0) {
+                            importeItemHTML = ' · ' + item.importeTotal.toFixed(2) + '€';
+                        }
+                        
+                        registrosHTML += '<div class="registro-item">' +
+                            '<div class="registro-fecha">📅 ' + fechaFormateada + '</div>' +
+                            '<div class="registro-info">' +
+                            'Contractual: ' + item.horasContractuales + 'h ' + item.minutosContractuales + 'min | ' +
+                            'Trabajadas: ' + item.horasTrabajadas + 'h ' + item.minutosTrabajadosRestantes + 'min' +
+                            '</div>' +
+                            '<div class="registro-periodos">' + periodosTexto + '</div>' +
+                            '<div class="registro-horas">' +
+                            '+' + item.horasExtra + 'h ' + item.minutosExtra + 'min' + importeItemHTML +
+                            '</div>' +
+                            '<button class="btn-eliminar-registro" onclick="eliminarDelHistorial(' + indexOriginal + ')">' +
+                            '🗑️ Eliminar' +
+                            '</button>' +
+                            '</div>';
+                    });
+                    
+                    empleadoCard.innerHTML = '<div class="empleado-header">' +
+                        '<div>' +
+                        '<div class="empleado-nombre">' + nombreEmpleado + '</div>' +
+                        '<div style="font-size: 12px; color: #999; margin-top: 3px;">' +
+                        registros.length + ' registro' + (registros.length !== 1 ? 's' : '') + (hayFiltrosActivos ? ' (filtrado)' : '') +
+                        '</div>' +
+                        '</div>' +
+                        '<div style="text-align: right;">' +
+                        '<div class="empleado-total">' + horasTotales + 'h ' + minutosTotales + 'min</div>' +
+                        importeEmpleadoHTML +
+                        '<button class="toggle-registros" onclick="toggleRegistros(\'' + registrosId + '\')">' +
+                        'Ver detalles' +
+                        '</button>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div id="' + registrosId + '" class="empleado-registros registros-collapsed">' +
+                        registrosHTML +
+                        '</div>';
+                    
+                    container.appendChild(empleadoCard);
+                });
+            } catch(e) {
+                console.error('Error mostrar historial:', e);
+            }
+        }
+
+        function toggleRegistros(id) {
+            try {
+                var registros = document.getElementById(id);
+                var btn = event.target;
+                
+                if (registros.classList.contains('registros-collapsed')) {
+                    registros.classList.remove('registros-collapsed');
+                    btn.textContent = 'Ocultar';
+                } else {
+                    registros.classList.add('registros-collapsed');
+                    btn.textContent = 'Ver detalles';
+                }
+            } catch(e) {
+                console.error('Error toggle registros:', e);
+            }
+        }
+
+        function actualizarFiltroEmpleados() {
+            try {
+                var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+                var select = document.getElementById('filtroEmpleado');
+                var valorActual = select.value;
+                
+                var empleadosSet = {};
+                historial.forEach(function(item) {
+                    empleadosSet[item.nombreEmpleado] = true;
+                });
+                
+                var empleados = Object.keys(empleadosSet).sort();
+                
+                select.innerHTML = '<option value="">Todos los empleados</option>';
+                empleados.forEach(function(nombre) {
+                    var option = document.createElement('option');
+                    option.value = nombre;
+                    option.textContent = nombre;
+                    if (nombre === valorActual) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            } catch(e) {
+                console.error('Error actualizar filtro empleados:', e);
+            }
+        }
+
+        function actualizarListaEmpleados() {
+            try {
+                var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+                var datalist = document.getElementById('empleados-list');
+                
+                var empleadosSet = {};
+                historial.forEach(function(item) {
+                    empleadosSet[item.nombreEmpleado] = true;
+                });
+                
+                var empleados = Object.keys(empleadosSet).sort();
+                
+                datalist.innerHTML = '';
+                empleados.forEach(function(nombre) {
+                    var option = document.createElement('option');
+                    option.value = nombre;
+                    datalist.appendChild(option);
+                });
+            } catch(e) {
+                console.error('Error actualizar lista empleados:', e);
+            }
+        }
+
+        function limpiarFiltros() {
+            try {
+                document.getElementById('filtroEmpleado').value = '';
+                document.getElementById('fechaDesde').value = '';
+                document.getElementById('fechaHasta').value = '';
+                filtrarHistorial();
+            } catch(e) {
+                console.error('Error limpiar filtros:', e);
+            }
+        }
+
+        function eliminarDelHistorial(index) {
+            try {
+                if (confirm('¿Eliminar este registro?')) {
+                    var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+                    historial.splice(index, 1);
+                    localStorage.setItem('historialHorasExtra', JSON.stringify(historial));
+                    filtrarHistorial();
+                    actualizarListaEmpleados();
+                }
+            } catch(e) {
+                console.error('Error eliminar historial:', e);
+            }
+        }
+
+        function mostrarOpcionesBorrado() {
+            try {
+                document.getElementById('opcionesBorrado').style.display = 'block';
+            } catch(e) {
+                console.error('Error mostrar opciones:', e);
+            }
+        }
+
+        function ocultarOpcionesBorrado() {
+            try {
+                document.getElementById('opcionesBorrado').style.display = 'none';
+            } catch(e) {
+                console.error('Error ocultar opciones:', e);
+            }
+        }
+
+        function borrarEmpleadoSeleccionado() {
+            try {
+                var filtroEmpleado = document.getElementById('filtroEmpleado').value;
+                
+                if (!filtroEmpleado) {
+                    mostrarAlerta('❌ Primero selecciona un empleado en el filtro');
+                    return;
+                }
+                
+                if (confirm('¿Borrar TODOS los registros de ' + filtroEmpleado + '?')) {
+                    var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+                    historial = historial.filter(function(item) {
+                        return item.nombreEmpleado !== filtroEmpleado;
+                    });
+                    localStorage.setItem('historialHorasExtra', JSON.stringify(historial));
+                    
+                    document.getElementById('filtroEmpleado').value = '';
+                    filtrarHistorial();
+                    actualizarListaEmpleados();
+                    ocultarOpcionesBorrado();
+                    mostrarAlerta('✅ Registros eliminados', 'success');
+                }
+            } catch(e) {
+                console.error('Error borrar empleado:', e);
+            }
+        }
+
+        function borrarTodosRegistros() {
+            try {
+                if (confirm('⚠️ ¿Borrar TODOS los registros? NO se puede deshacer')) {
+                    localStorage.removeItem('historialHorasExtra');
+                    filtrarHistorial();
+                    actualizarListaEmpleados();
+                    ocultarOpcionesBorrado();
+                    mostrarAlerta('✅ Todos los registros eliminados', 'success');
+                }
+            } catch(e) {
+                console.error('Error borrar todos:', e);
+            }
+        }
+
+        function enviarEmailGestoria() {
+            try {
+                enviarEmail('gestoria');
+            } catch(e) {
+                console.error('Error enviar email gestoria:', e);
+                mostrarAlerta('❌ Error al enviar email');
+            }
+        }
+
+        function enviarEmailPersonal() {
+            try {
+                enviarEmail('personal');
+            } catch(e) {
+                console.error('Error enviar email personal:', e);
+                mostrarAlerta('❌ Error al enviar email');
+            }
+        }
+
+        function enviarEmail(destino) {
+            try {
+                var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+                
+                if (historial.length === 0) {
+                    mostrarAlerta('❌ No hay registros para enviar');
+                    return;
+                }
+                
+                var fechaDesde = document.getElementById('fechaDesde').value;
+                var fechaHasta = document.getElementById('fechaHasta').value;
+                var filtroEmpleado = document.getElementById('filtroEmpleado').value;
+                
+                var historialFiltrado = historial;
+                
+                if (filtroEmpleado) {
+                    historialFiltrado = historialFiltrado.filter(function(item) {
+                        return item.nombreEmpleado === filtroEmpleado;
+                    });
+                }
+                
+                if (fechaDesde) {
+                    historialFiltrado = historialFiltrado.filter(function(item) {
+                        return item.fechaTrabajo >= fechaDesde;
+                    });
+                }
+                
+                if (fechaHasta) {
+                    historialFiltrado = historialFiltrado.filter(function(item) {
+                        return item.fechaTrabajo <= fechaHasta;
+                    });
+                }
+                
+                if (historialFiltrado.length === 0) {
+                    mostrarAlerta('❌ No hay registros con los filtros seleccionados');
+                    return;
+                }
+                
+                // Agrupar por empleado
+                var empleados = {};
+                historialFiltrado.forEach(function(item) {
+                    if (!empleados[item.nombreEmpleado]) {
+                        empleados[item.nombreEmpleado] = [];
+                    }
+                    empleados[item.nombreEmpleado].push(item);
+                });
+                
+                // Determinar periodo
+                var fechaHoy = new Date();
+                var mesActual = fechaHoy.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                var periodo = mesActual;
+                
+                if (fechaDesde && fechaHasta) {
+                    var objDesde = new Date(fechaDesde + 'T00:00:00');
+                    var objHasta = new Date(fechaHasta + 'T00:00:00');
+                    var desde = objDesde.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+                    var hasta = objHasta.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+                    periodo = desde + ' al ' + hasta;
+                }
+                
+                // Construir email
+                var asunto = 'Horas Extra - ' + periodo;
+                var cuerpo = 'Hola,\n\n';
+                cuerpo += 'Les envio el detalle de las horas extra del periodo: ' + periodo + '\n\n';
+                cuerpo += '================================\n';
+                cuerpo += 'RESUMEN POR EMPLEADO\n';
+                cuerpo += '================================\n\n';
+                
+                var nombresEmpleados = Object.keys(empleados).sort();
+                nombresEmpleados.forEach(function(nombreEmpleado) {
+                    var registros = empleados[nombreEmpleado];
+                    var totalMinutosEmpleado = 0;
+                    registros.forEach(function(r) {
+                        totalMinutosEmpleado += r.totalMinutosExtra;
+                    });
+                    
+                    var horasTotales = Math.floor(totalMinutosEmpleado / 60);
+                    var minutosTotales = totalMinutosEmpleado % 60;
+                    
+                    var importeTotal = 0;
+                    registros.forEach(function(r) {
+                        if (r.importeTotal) {
+                            importeTotal += r.importeTotal;
+                        }
+                    });
+                    
+                    cuerpo += nombreEmpleado + '\n';
+                    cuerpo += '   Total: ' + horasTotales + 'h ' + minutosTotales + 'min';
+                    
+                    if (importeTotal > 0) {
+                        cuerpo += ' (' + importeTotal.toFixed(2) + ' euros)';
+                    }
+                    cuerpo += '\n';
+                    cuerpo += '   Registros: ' + registros.length + '\n\n';
+                    
+                    cuerpo += '   Desglose por dia:\n';
+                    registros.sort(function(a, b) {
+                        return a.fechaTrabajo.localeCompare(b.fechaTrabajo);
+                    }).forEach(function(r) {
+                        var fechaObj = new Date(r.fechaTrabajo + 'T00:00:00');
+                        var fecha = fechaObj.toLocaleDateString('es-ES', { 
+                            weekday: 'short', 
+                            day: '2-digit', 
+                            month: 'short' 
+                        });
+                        var periodos = r.periodos.map(function(p) {
+                            return p.inicio + '-' + p.fin + (p.diaSiguiente ? '(+1)' : '');
+                        }).join(', ');
+                        
+                        cuerpo += '   - ' + fecha + ': ' + r.horasExtra + 'h ' + r.minutosExtra + 'min';
+                        if (r.importeTotal > 0) {
+                            cuerpo += ' (' + r.importeTotal.toFixed(2) + ' euros)';
+                        }
+                        cuerpo += '\n     Horarios: ' + periodos + '\n';
+                    });
+                    
+                    cuerpo += '\n';
+                });
+                
+                // Total general
+                var totalMinutosGeneral = 0;
+                historialFiltrado.forEach(function(r) {
+                    totalMinutosGeneral += r.totalMinutosExtra;
+                });
+                
+                var horasGenerales = Math.floor(totalMinutosGeneral / 60);
+                var minutosGenerales = totalMinutosGeneral % 60;
+                
+                var importeGeneral = 0;
+                historialFiltrado.forEach(function(r) {
+                    if (r.importeTotal) {
+                        importeGeneral += r.importeTotal;
+                    }
+                });
+                
+                cuerpo += '================================\n';
+                cuerpo += 'TOTAL GENERAL: ' + horasGenerales + 'h ' + minutosGenerales + 'min';
+                if (importeGeneral > 0) {
+                    cuerpo += ' (' + importeGeneral.toFixed(2) + ' euros)';
+                }
+                cuerpo += '\n================================\n\n';
+                cuerpo += 'Saludos cordiales.';
+                
+                // Email destino
+                var emailDestino = '';
+                
+                if (destino === 'gestoria') {
+                    emailDestino = localStorage.getItem('emailGestoria') || 'javier@contaglobal.com';
+                } else {
+                    emailDestino = localStorage.getItem('emailPersonal') || 'tuska56@hotmail.com';
+                    asunto = '[COPIA] ' + asunto;
+                }
+                
+                // Crear mailto
+                var mailtoLink = 'mailto:' + emailDestino + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(cuerpo);
+                
+                window.location.href = mailtoLink;
+                mostrarAlerta('✅ Abriendo email...', 'success');
+            } catch(e) {
+                console.error('Error enviar email:', e);
+                mostrarAlerta('❌ Error: ' + e.message);
+            }
+        }
+
+        function cargarAjustes() {
+            try {
+                var emailGestoria = localStorage.getItem('emailGestoria');
+                if (emailGestoria) {
+                    document.getElementById('emailGestoria').value = emailGestoria;
+                }
+                
+                var emailPersonal = localStorage.getItem('emailPersonal');
+                if (emailPersonal) {
+                    document.getElementById('emailPersonal').value = emailPersonal;
+                }
+                
+                cargarListaPreciosEmpleados();
+            } catch(e) {
+                console.error('Error cargar ajustes:', e);
+            }
+        }
+
+        function guardarEmailGestoria() {
+            try {
+                var email = document.getElementById('emailGestoria').value.trim();
+                if (email) {
+                    localStorage.setItem('emailGestoria', email);
+                    mostrarAlerta('✅ Email de gestoría guardado', 'success');
+                }
+            } catch(e) {
+                console.error('Error guardar email gestoria:', e);
+            }
+        }
+
+        function guardarEmailPersonal() {
+            try {
+                var email = document.getElementById('emailPersonal').value.trim();
+                if (email) {
+                    localStorage.setItem('emailPersonal', email);
+                    mostrarAlerta('✅ Email personal guardado', 'success');
+                }
+            } catch(e) {
+                console.error('Error guardar email personal:', e);
+            }
+        }
+
+        function cargarPrecioEmpleado() {
+            try {
+                var nombreEmpleado = document.getElementById('nombreEmpleado').value.trim();
+                if (!nombreEmpleado) return;
+                
+                var precios = JSON.parse(localStorage.getItem('preciosEmpleados') || '{}');
+                var precio = precios[nombreEmpleado];
+                
+                if (precio) {
+                    document.getElementById('precioHoraExtra').value = precio;
+                }
+            } catch(e) {
+                console.error('Error cargar precio empleado:', e);
+            }
+        }
+
+        function guardarPrecioEmpleado(nombreEmpleado, precio) {
+            try {
+                if (!nombreEmpleado || !precio || precio <= 0) return;
+                
+                var precios = JSON.parse(localStorage.getItem('preciosEmpleados') || '{}');
+                precios[nombreEmpleado] = precio;
+                localStorage.setItem('preciosEmpleados', JSON.stringify(precios));
+            } catch(e) {
+                console.error('Error guardar precio empleado:', e);
+            }
+        }
+
+        function cargarListaPreciosEmpleados() {
+            try {
+                var precios = JSON.parse(localStorage.getItem('preciosEmpleados') || '{}');
+                var container = document.getElementById('listaPreciosEmpleados');
+                
+                var nombres = Object.keys(precios);
+                if (nombres.length === 0) {
+                    container.innerHTML = '<div style="color: #999; font-style: italic; text-align: center; padding: 20px;">No hay precios guardados</div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                nombres.sort().forEach(function(nombre) {
+                    var precio = precios[nombre];
+                    var itemDiv = document.createElement('div');
+                    itemDiv.style.cssText = 'background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;';
+                    
+                    itemDiv.innerHTML = '<div>' +
+                        '<div style="font-weight: 600; color: #333;">' + nombre + '</div>' +
+                        '<div style="font-size: 12px; color: #999;">Precio por hora</div>' +
+                        '</div>' +
+                        '<div style="display: flex; align-items: center; gap: 10px;">' +
+                        '<input type="number" value="' + precio + '" step="0.01" min="0" ' +
+                        'style="width: 80px; padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;" ' +
+                        'onchange="actualizarPrecioEmpleado(\'' + nombre + '\', this.value)">' +
+                        '<span style="font-weight: 600; color: #1dd1a1;">€/h</span>' +
+                        '<button onclick="eliminarPrecioEmpleado(\'' + nombre + '\')" ' +
+                        'style="background: #ff4757; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">' +
+                        '🗑️' +
+                        '</button>' +
+                        '</div>';
+                    
+                    container.appendChild(itemDiv);
+                });
+            } catch(e) {
+                console.error('Error cargar lista precios:', e);
+            }
+        }
+
+        function actualizarPrecioEmpleado(nombre, precio) {
+            try {
+                var precioNum = parseFloat(precio);
+                if (precioNum > 0) {
+                    guardarPrecioEmpleado(nombre, precioNum);
+                    mostrarAlerta('✅ Precio actualizado', 'success');
+                }
+            } catch(e) {
+                console.error('Error actualizar precio:', e);
+            }
+        }
+
+        function eliminarPrecioEmpleado(nombre) {
+            try {
+                if (confirm('¿Eliminar el precio de ' + nombre + '?')) {
+                    var precios = JSON.parse(localStorage.getItem('preciosEmpleados') || '{}');
+                    delete precios[nombre];
+                    localStorage.setItem('preciosEmpleados', JSON.stringify(precios));
+                    cargarListaPreciosEmpleados();
+                    mostrarAlerta('✅ Precio eliminado', 'success');
+                }
+            } catch(e) {
+                console.error('Error eliminar precio:', e);
+            }
+        }
+
+        function exportarDatos() {
+            try {
+                var datos = {
+                    historial: JSON.parse(localStorage.getItem('historialHorasExtra') || '[]'),
+                    precios: JSON.parse(localStorage.getItem('preciosEmpleados') || '{}'),
+                    fecha: new Date().toISOString()
+                };
+                
+                var dataStr = JSON.stringify(datos, null, 2);
+                var dataBlob = new Blob([dataStr], {type: 'application/json'});
+                var url = URL.createObjectURL(dataBlob);
+                var link = document.createElement('a');
+                link.href = url;
+                link.download = 'backup_horas_extra_' + new Date().toISOString().split('T')[0] + '.json';
+                link.click();
+                
+                mostrarAlerta('✅ Datos exportados', 'success');
+            } catch(e) {
+                console.error('Error exportar:', e);
+                mostrarAlerta('❌ Error al exportar');
+            }
+        }
+
+        function borrarTodosDatos() {
+            try {
+                if (confirm('⚠️ ¿Borrar TODO? NO se puede deshacer')) {
+                    localStorage.clear();
+                    mostrarAlerta('✅ Datos eliminados', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                }
+            } catch(e) {
+                console.error('Error borrar datos:', e);
+            }
+        }
+    </script>
+</body>
+</html>
