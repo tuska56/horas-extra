@@ -2,7 +2,6 @@
 
 <html lang="es">
 <head>
-    <link rel="apple-touch-icon" href="icon-180.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1153,47 +1152,41 @@
             var fechaHasta = document.getElementById('fechaHasta').value;
             var hayFiltrosActivos = filtroEmpleado || fechaDesde || fechaHasta;
             
-            // Sumatorio total acumulado
+            // Calcular totales del filtro actual
+            var totalMinutosFiltroActual = 0;
+            var totalMinutosTrabajadosFiltroActual = 0;
+            
+            if (hayFiltrosActivos) {
+                historialFiltrado.forEach(function(r) {
+                    totalMinutosFiltroActual += r.totalMinutosExtra;
+                    var minutosTrab = r.horasTrabajadas * 60 + r.minutosTrabajadosRestantes;
+                    totalMinutosTrabajadosFiltroActual += minutosTrab;
+                });
+            } else {
+                // Si no hay filtros, el filtro es igual al total
+                totalMinutosFiltroActual = totalMinutosAcumulado;
+                totalMinutosTrabajadosFiltroActual = totalMinutosTrabajadosAcumulado;
+            }
+            
+            var horasFiltroActual = Math.floor(totalMinutosFiltroActual / 60);
+            var minutosFiltroActual = totalMinutosFiltroActual % 60;
+            
+            var horasTrabajadasFiltroActual = Math.floor(totalMinutosTrabajadosFiltroActual / 60);
+            var minutosTrabajadasFiltroActual = totalMinutosTrabajadosFiltroActual % 60;
+            
+            // Sumatorio según filtros activos
+            var tituloSumatorio = hayFiltrosActivos ? '📊 Total del Filtro Actual' : '💎 Total Acumulado (Todos los registros)';
+            
             var sumatorioHTML = '<div class="sumatorio-box">' +
-                '<div class="sumatorio-title">💎 Total Acumulado (Todos los registros)</div>' +
-                '<div class="sumatorio-total">' + horasAcumuladas + 'h ' + minutosAcumulados + 'min</div>' +
+                '<div class="sumatorio-title">' + tituloSumatorio + '</div>' +
+                '<div class="sumatorio-total">' + horasFiltroActual + 'h ' + minutosFiltroActual + 'min</div>' +
                 '<div style="font-size: 14px; opacity: 0.85; margin-top: 8px;">Horas extra</div>' +
-                '<div style="font-size: 24px; font-weight: 600; margin-top: 10px;">' + horasTrabajadasAcum + 'h ' + minutosTrabajadasAcum + 'min</div>' +
+                '<div style="font-size: 24px; font-weight: 600; margin-top: 10px;">' + horasTrabajadasFiltroActual + 'h ' + minutosTrabajadasFiltroActual + 'min</div>' +
                 '<div style="font-size: 14px; opacity: 0.85; margin-top: 5px;">Horas trabajadas</div>' +
                 '<div class="sumatorio-detalles" style="margin-top: 10px;">' +
-                historialCompleto.length + ' registro' + (historialCompleto.length !== 1 ? 's' : '') + ' guardado' + (historialCompleto.length !== 1 ? 's' : '') +
+                (hayFiltrosActivos ? historialFiltrado.length : historialCompleto.length) + ' registro' + ((hayFiltrosActivos ? historialFiltrado.length : historialCompleto.length) !== 1 ? 's' : '') +
                 '</div>' +
                 '</div>';
-            
-            // Si hay filtros y registros filtrados
-            if (hayFiltrosActivos && historialFiltrado.length > 0) {
-                var totalMinutosFiltrado = 0;
-                var totalMinutosTrabajadosFiltrado = 0;
-                historialFiltrado.forEach(function(r) {
-                    totalMinutosFiltrado += r.totalMinutosExtra;
-                    var minutosTrab = r.horasTrabajadas * 60 + r.minutosTrabajadosRestantes;
-                    totalMinutosTrabajadosFiltrado += minutosTrab;
-                });
-                
-                var horasFiltradas = Math.floor(totalMinutosFiltrado / 60);
-                var minutosFiltrados = totalMinutosFiltrado % 60;
-                
-                var horasTrabajadasFilt = Math.floor(totalMinutosTrabajadosFiltrado / 60);
-                var minutosTrabajadasFilt = totalMinutosTrabajadosFiltrado % 60;
-                
-                var tituloFiltro = '📊 Total del Periodo Seleccionado';
-                
-                sumatorioHTML += '<div class="sumatorio-box" style="background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%); margin-top: 15px;">' +
-                    '<div class="sumatorio-title">' + tituloFiltro + '</div>' +
-                    '<div class="sumatorio-total">' + horasFiltradas + 'h ' + minutosFiltrados + 'min</div>' +
-                    '<div style="font-size: 14px; opacity: 0.85; margin-top: 8px;">Horas extra</div>' +
-                    '<div style="font-size: 24px; font-weight: 600; margin-top: 10px;">' + horasTrabajadasFilt + 'h ' + minutosTrabajadasFilt + 'min</div>' +
-                    '<div style="font-size: 14px; opacity: 0.85; margin-top: 5px;">Horas trabajadas</div>' +
-                    '<div class="sumatorio-detalles" style="margin-top: 10px;">' +
-                    historialFiltrado.length + ' registro' + (historialFiltrado.length !== 1 ? 's' : '') + ' en este periodo' +
-                    '</div>' +
-                    '</div>';
-            }
             
             sumatorioContainer.innerHTML = sumatorioHTML;
             
