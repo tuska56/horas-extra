@@ -2,12 +2,12 @@
 
 <html lang="es">
 <head>
-    <link rel="apple-touch-icon" href="icon-180.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Calculadora de Horas Extra</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -438,6 +438,97 @@
     .registros-collapsed {
         display: none;
     }
+
+    .calendario-visual {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+
+    .calendario-mes {
+        margin-bottom: 20px;
+    }
+
+    .calendario-mes-titulo {
+        font-size: 14px;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .calendario-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+    }
+
+    .calendario-dia-nombre {
+        font-size: 10px;
+        font-weight: 600;
+        color: #999;
+        text-align: center;
+        padding: 5px 0;
+    }
+
+    .calendario-dia {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        border-radius: 8px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .calendario-dia.vacio {
+        background: transparent;
+    }
+
+    .calendario-dia.normal {
+        background: #f5f5f5;
+        color: #999;
+    }
+
+    .calendario-dia.trabajado {
+        background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 2px 5px rgba(29, 209, 161, 0.3);
+    }
+
+    .calendario-dia.trabajado:active {
+        transform: scale(0.95);
+    }
+
+    .calendario-dia.hoy {
+        border: 2px solid #667eea;
+    }
+
+    .calendario-horas {
+        font-size: 8px;
+        position: absolute;
+        bottom: 2px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        opacity: 0.9;
+    }
+
+    .toggle-calendario {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-right: 10px;
+    }
 </style>
 ```
 
@@ -491,6 +582,9 @@
                     <input type="number" id="minutosContractuales" placeholder="Minutos" min="0" max="59" value="15">
                 </div>
             </div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                💡 Pon 0h 0min para festivos/domingos (todo serán horas extra)
+            </div>
         </div>
 
         <div id="periodosContainer"></div>
@@ -527,7 +621,7 @@
             <button class="btn-clear-filtro" onclick="limpiarFiltros()">🔄 Limpiar Filtros</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
             <button class="btn btn-primary" onclick="enviarEmailGestoria()" style="font-size: 14px; padding: 12px;">
                 📧 Enviar a Gestoría
             </button>
@@ -536,7 +630,10 @@
             </button>
         </div>
         
-        <div style="margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <button class="btn" onclick="exportarCalendarioPDF()" style="font-size: 14px; padding: 12px; background: #ee5a6f; color: white;">
+                📄 Exportar PDF
+            </button>
             <button class="btn btn-warning" onclick="mostrarOpcionesBorrado()" style="font-size: 14px; padding: 12px; background: #ff4757; color: white;">
                 🗑️ Borrar Registros
             </button>
@@ -756,8 +853,9 @@
             
             var minutosContractualesTotal = horasContractuales * 60 + minutosContractuales;
             
-            if (minutosContractualesTotal === 0) {
-                mostrarAlerta('❌ Las horas contractuales deben ser mayor a 0');
+            // Permitir 0 horas contractuales (para festivos/domingos)
+            if (minutosContractualesTotal < 0) {
+                mostrarAlerta('❌ Las horas contractuales no pueden ser negativas');
                 return;
             }
             
@@ -1302,10 +1400,18 @@
                     '<div style="text-align: right;">' +
                     '<div class="empleado-total">' + horasTotales + 'h ' + minutosTotales + 'min</div>' +
                     importeEmpleadoHTML +
+                    '<div style="margin-top: 8px;">' +
+                    '<button class="toggle-calendario" onclick="toggleCalendario(\'' + registrosId + '-cal\')">' +
+                    '📅 Calendario' +
+                    '</button>' +
                     '<button class="toggle-registros" onclick="toggleRegistros(\'' + registrosId + '\')">' +
                     'Ver detalles' +
                     '</button>' +
                     '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div id="' + registrosId + '-cal" class="calendario-visual" style="display: none;">' +
+                    generarCalendarioEmpleado(registros) +
                     '</div>' +
                     '<div id="' + registrosId + '" class="empleado-registros registros-collapsed">' +
                     registrosHTML +
@@ -1332,6 +1438,119 @@
             }
         } catch(e) {
             console.error('Error toggle registros:', e);
+        }
+    }
+
+    function toggleCalendario(id) {
+        try {
+            var calendario = document.getElementById(id);
+            var btn = event.target;
+            
+            if (calendario.style.display === 'none') {
+                calendario.style.display = 'block';
+                btn.textContent = '📅 Ocultar';
+            } else {
+                calendario.style.display = 'none';
+                btn.textContent = '📅 Calendario';
+            }
+        } catch(e) {
+            console.error('Error toggle calendario:', e);
+        }
+    }
+
+    function generarCalendarioEmpleado(registros) {
+        try {
+            // Agrupar registros por mes
+            var registrosPorMes = {};
+            var hoy = new Date();
+            
+            registros.forEach(function(r) {
+                var fecha = new Date(r.fechaTrabajo + 'T00:00:00');
+                var mesKey = fecha.getFullYear() + '-' + String(fecha.getMonth() + 1).padStart(2, '0');
+                
+                if (!registrosPorMes[mesKey]) {
+                    registrosPorMes[mesKey] = {
+                        year: fecha.getFullYear(),
+                        month: fecha.getMonth(),
+                        registros: {}
+                    };
+                }
+                
+                var dia = fecha.getDate();
+                registrosPorMes[mesKey].registros[dia] = r;
+            });
+            
+            // Ordenar meses (más reciente primero)
+            var meses = Object.keys(registrosPorMes).sort().reverse();
+            
+            var html = '';
+            
+            meses.forEach(function(mesKey) {
+                var mesData = registrosPorMes[mesKey];
+                var nombreMes = new Date(mesData.year, mesData.month, 1).toLocaleDateString('es-ES', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+                
+                html += '<div class="calendario-mes">';
+                html += '<div class="calendario-mes-titulo">' + nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1) + '</div>';
+                html += '<div class="calendario-grid">';
+                
+                // Nombres de días
+                var diasNombres = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+                diasNombres.forEach(function(d) {
+                    html += '<div class="calendario-dia-nombre">' + d + '</div>';
+                });
+                
+                // Primer día del mes
+                var primerDia = new Date(mesData.year, mesData.month, 1);
+                var diaSemana = primerDia.getDay();
+                // Ajustar: domingo = 0, lunes = 1
+                diaSemana = diaSemana === 0 ? 6 : diaSemana - 1;
+                
+                // Días vacíos al inicio
+                for (var i = 0; i < diaSemana; i++) {
+                    html += '<div class="calendario-dia vacio"></div>';
+                }
+                
+                // Días del mes
+                var ultimoDia = new Date(mesData.year, mesData.month + 1, 0).getDate();
+                
+                for (var dia = 1; dia <= ultimoDia; dia++) {
+                    var registro = mesData.registros[dia];
+                    var fechaDia = new Date(mesData.year, mesData.month, dia);
+                    var esHoy = fechaDia.toDateString() === hoy.toDateString();
+                    
+                    var clases = 'calendario-dia';
+                    var contenido = dia;
+                    var horasExtra = '';
+                    
+                    if (registro) {
+                        clases += ' trabajado';
+                        horasExtra = '<div class="calendario-horas">' + registro.horasExtra + 'h ' + registro.minutosExtra + 'm</div>';
+                    } else {
+                        clases += ' normal';
+                    }
+                    
+                    if (esHoy) {
+                        clases += ' hoy';
+                    }
+                    
+                    html += '<div class="' + clases + '">' + contenido + horasExtra + '</div>';
+                }
+                
+                html += '</div>'; // fin calendario-grid
+                html += '</div>'; // fin calendario-mes
+            });
+            
+            if (html === '') {
+                html = '<div style="text-align: center; color: #999; padding: 20px;">No hay registros para mostrar</div>';
+            }
+            
+            return html;
+        } catch(e) {
+            console.error('Error generar calendario:', e);
+            return '<div style="text-align: center; color: #ff4757; padding: 20px;">Error al generar calendario</div>';
         }
     }
 
@@ -1820,6 +2039,203 @@
             }
         } catch(e) {
             console.error('Error borrar datos:', e);
+        }
+    }
+
+    function exportarCalendarioPDF() {
+        try {
+            // Verificar que jsPDF esté disponible
+            if (typeof window.jspdf === 'undefined') {
+                mostrarAlerta('❌ Error: Librería PDF no cargada. Recarga la página.');
+                return;
+            }
+
+            var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+            
+            if (historial.length === 0) {
+                mostrarAlerta('❌ No hay registros para exportar');
+                return;
+            }
+            
+            var fechaDesde = document.getElementById('fechaDesde').value;
+            var fechaHasta = document.getElementById('fechaHasta').value;
+            var filtroEmpleado = document.getElementById('filtroEmpleado').value;
+            
+            var historialFiltrado = historial;
+            
+            if (filtroEmpleado) {
+                historialFiltrado = historialFiltrado.filter(function(item) {
+                    return item.nombreEmpleado === filtroEmpleado;
+                });
+            }
+            
+            if (fechaDesde) {
+                historialFiltrado = historialFiltrado.filter(function(item) {
+                    return item.fechaTrabajo >= fechaDesde;
+                });
+            }
+            
+            if (fechaHasta) {
+                historialFiltrado = historialFiltrado.filter(function(item) {
+                    return item.fechaTrabajo <= fechaHasta;
+                });
+            }
+            
+            if (historialFiltrado.length === 0) {
+                mostrarAlerta('❌ No hay registros con los filtros seleccionados');
+                return;
+            }
+            
+            // Crear PDF
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            
+            // Título
+            doc.setFontSize(18);
+            doc.setTextColor(102, 126, 234);
+            doc.text('Calendario de Horas Trabajadas', 105, 15, { align: 'center' });
+            
+            // Fecha de generación
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            var fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            doc.text('Generado el: ' + fechaHoy, 105, 22, { align: 'center' });
+            
+            var yPos = 35;
+            
+            // Agrupar por empleado
+            var empleados = {};
+            historialFiltrado.forEach(function(item) {
+                if (!empleados[item.nombreEmpleado]) {
+                    empleados[item.nombreEmpleado] = [];
+                }
+                empleados[item.nombreEmpleado].push(item);
+            });
+            
+            var nombresEmpleados = Object.keys(empleados).sort();
+            
+            nombresEmpleados.forEach(function(nombreEmpleado) {
+                var registros = empleados[nombreEmpleado];
+                
+                // Ordenar por fecha
+                registros.sort(function(a, b) {
+                    return a.fechaTrabajo.localeCompare(b.fechaTrabajo);
+                });
+                
+                // Calcular totales
+                var totalMinutosExtra = 0;
+                var totalMinutosTrabajados = 0;
+                var totalImporte = 0;
+                
+                registros.forEach(function(r) {
+                    totalMinutosExtra += r.totalMinutosExtra;
+                    totalMinutosTrabajados += (r.horasTrabajadas * 60 + r.minutosTrabajadosRestantes);
+                    totalImporte += (r.importeTotal || 0);
+                });
+                
+                var horasExtra = Math.floor(totalMinutosExtra / 60);
+                var minutosExtra = totalMinutosExtra % 60;
+                
+                var horasTrabajadas = Math.floor(totalMinutosTrabajados / 60);
+                var minutosTrabajadas = totalMinutosTrabajados % 60;
+                
+                // Nueva página si no hay espacio
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                
+                // Nombre del empleado
+                doc.setFontSize(14);
+                doc.setTextColor(29, 209, 161);
+                doc.text(nombreEmpleado, 15, yPos);
+                yPos += 7;
+                
+                // Totales
+                doc.setFontSize(10);
+                doc.setTextColor(50, 50, 50);
+                doc.text('Horas extra: ' + horasExtra + 'h ' + minutosExtra + 'min', 15, yPos);
+                doc.text('Horas trabajadas: ' + horasTrabajadas + 'h ' + minutosTrabajadas + 'min', 90, yPos);
+                
+                if (totalImporte > 0) {
+                    doc.text('Total: ' + totalImporte.toFixed(2) + ' euros', 160, yPos);
+                }
+                
+                yPos += 8;
+                
+                // Tabla de días
+                doc.setFontSize(9);
+                doc.setTextColor(80, 80, 80);
+                
+                // Cabecera de tabla
+                doc.setFillColor(240, 240, 240);
+                doc.rect(15, yPos - 4, 180, 6, 'F');
+                doc.text('Fecha', 17, yPos);
+                doc.text('Horarios', 55, yPos);
+                doc.text('Contractual', 110, yPos);
+                doc.text('Trabajadas', 145, yPos);
+                doc.text('Extra', 175, yPos);
+                yPos += 6;
+                
+                // Registros
+                registros.forEach(function(r, idx) {
+                    if (yPos > 280) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    
+                    var fecha = new Date(r.fechaTrabajo + 'T00:00:00');
+                    var fechaStr = fecha.toLocaleDateString('es-ES', { 
+                        day: '2-digit', 
+                        month: 'short'
+                    });
+                    
+                    var periodos = r.periodos.map(function(p) {
+                        return p.inicio + '-' + p.fin + (p.diaSiguiente ? '(+1)' : '');
+                    }).join(', ');
+                    
+                    // Alternar color de fondo
+                    if (idx % 2 === 0) {
+                        doc.setFillColor(250, 250, 250);
+                        doc.rect(15, yPos - 4, 180, 5, 'F');
+                    }
+                    
+                    doc.setTextColor(60, 60, 60);
+                    doc.text(fechaStr, 17, yPos);
+                    
+                    // Periodos (puede ser largo, acortar si es necesario)
+                    var periodosTexto = periodos.length > 35 ? periodos.substring(0, 32) + '...' : periodos;
+                    doc.text(periodosTexto, 55, yPos);
+                    
+                    doc.text(r.horasContractuales + 'h ' + r.minutosContractuales + 'm', 110, yPos);
+                    doc.text(r.horasTrabajadas + 'h ' + r.minutosTrabajadosRestantes + 'm', 145, yPos);
+                    
+                    doc.setTextColor(29, 209, 161);
+                    doc.text(r.horasExtra + 'h ' + r.minutosExtra + 'm', 175, yPos);
+                    
+                    yPos += 5;
+                });
+                
+                yPos += 10;
+            });
+            
+            // Generar nombre de archivo
+            var nombreArchivo = 'calendario_horas';
+            if (filtroEmpleado) {
+                nombreArchivo += '_' + filtroEmpleado.replace(/\s/g, '_');
+            }
+            if (fechaDesde && fechaHasta) {
+                nombreArchivo += '_' + fechaDesde + '_a_' + fechaHasta;
+            }
+            nombreArchivo += '.pdf';
+            
+            // Descargar
+            doc.save(nombreArchivo);
+            mostrarAlerta('✅ PDF generado correctamente', 'success');
+            
+        } catch(e) {
+            console.error('Error exportar PDF:', e);
+            mostrarAlerta('❌ Error al generar PDF: ' + e.message);
         }
     }
 </script>
