@@ -2250,26 +2250,34 @@ try {
                     doc.setFontSize(10);
                     doc.setTextColor(255, 255, 255);
                     doc.setFont(undefined, 'bold');
-                    doc.text(String(dia), x + (cellSize / 2), y + 7, { align: 'center' });
+                    doc.text(String(dia), x + (cellSize / 2), y + 6, { align: 'center' });
                     
-                    // Horarios - mostrar primeros periodos
-                    var horarios = registro.periodos.map(function(p) {
-                        return p.inicio.substring(0, 5) + '-' + p.fin.substring(0, 5);
-                    }).join(' ');
+                    // Mostrar horarios - cada periodo en una línea
+                    doc.setFontSize(4.5);
+                    doc.setFont(undefined, 'normal');
                     
-                    // Limitar a 20 caracteres para que quepa
-                    if (horarios.length > 20) {
-                        horarios = horarios.substring(0, 17) + '...';
+                    var yOffset = 10;
+                    var maxPeriodos = 2; // Mostrar máximo 2 periodos para que quepan
+                    
+                    for (var p = 0; p < Math.min(registro.periodos.length, maxPeriodos); p++) {
+                        var periodo = registro.periodos[p];
+                        var horario = periodo.inicio.substring(0, 5) + '-' + periodo.fin.substring(0, 5);
+                        if (periodo.diaSiguiente) {
+                            horario += '(+1)';
+                        }
+                        doc.text(horario, x + (cellSize / 2), y + yOffset, { align: 'center' });
+                        yOffset += 3.5;
                     }
                     
-                    doc.setFontSize(5);
-                    doc.setFont(undefined, 'normal');
-                    doc.text(horarios, x + (cellSize / 2), y + 13, { align: 'center' });
+                    // Si hay más de 2 periodos, mostrar "..."
+                    if (registro.periodos.length > maxPeriodos) {
+                        doc.text('...', x + (cellSize / 2), y + yOffset, { align: 'center' });
+                    }
                     
                     // Horas trabajadas
                     doc.setFontSize(6);
                     doc.setFont(undefined, 'bold');
-                    doc.text(registro.horasTrabajadas + 'h ' + registro.minutosTrabajadosRestantes + 'm', x + (cellSize / 2), y + cellSize - 4, { align: 'center' });
+                    doc.text(registro.horasTrabajadas + 'h ' + registro.minutosTrabajadosRestantes + 'm', x + (cellSize / 2), y + cellSize - 3, { align: 'center' });
                 } else {
                     // Día no trabajado - gris claro
                     doc.setFillColor(245, 245, 245);
