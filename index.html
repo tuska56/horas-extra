@@ -2,7 +2,6 @@
 
 <html lang="es">
 <head>
-    <link rel="apple-touch-icon" href="icon-180.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,6 +16,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+```
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -530,7 +530,7 @@
         margin-right: 10px;
     }
 </style>
-
+```
 
 </head>
 <body>
@@ -540,7 +540,7 @@
             <p>Gestiona las horas de tus empleados</p>
         </div>
 
-
+```
     <div class="tabs">
         <button class="tab active" onclick="cambiarTab('calcular')">➕ Calcular</button>
         <button class="tab" onclick="cambiarTab('historial')">📊 Historial</button>
@@ -576,10 +576,10 @@
             <label>📋 Horas Contractuales</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div>
-                    <input type="number" id="horasContractuales" placeholder="Horas" min="0" max="23" value="7">
+                    <input type="number" id="horasContractuales" placeholder="Horas" min="0" max="23" value="0">
                 </div>
                 <div>
-                    <input type="number" id="minutosContractuales" placeholder="Minutos" min="0" max="59" value="15">
+                    <input type="number" id="minutosContractuales" placeholder="Minutos" min="0" max="59" value="0">
                 </div>
             </div>
             <div style="font-size: 12px; color: #666; margin-top: 5px;">
@@ -1122,8 +1122,8 @@
         try {
             document.getElementById('nombreEmpleado').value = '';
             document.getElementById('fechaTrabajo').valueAsDate = new Date();
-            document.getElementById('horasContractuales').value = '7';
-            document.getElementById('minutosContractuales').value = '15';
+            document.getElementById('horasContractuales').value = '0';
+            document.getElementById('minutosContractuales').value = '0';
             document.getElementById('precioHoraExtra').value = '';
             
             var periodos = document.querySelectorAll('.periodo-container');
@@ -1527,7 +1527,21 @@
                     
                     if (registro) {
                         clases += ' trabajado';
-                        horasExtra = '<div class="calendario-horas">' + registro.horasExtra + 'h ' + registro.minutosExtra + 'm</div>';
+                        
+                        // Mostrar horarios
+                        var horarios = registro.periodos.map(function(p) {
+                            return p.inicio + '-' + p.fin;
+                        }).join(', ');
+                        
+                        // Limitar longitud si es muy largo
+                        if (horarios.length > 15) {
+                            horarios = horarios.substring(0, 12) + '...';
+                        }
+                        
+                        horasExtra = '<div class="calendario-horas" style="font-size: 7px; line-height: 1.2;">' + 
+                                    horarios + '<br>' + 
+                                    registro.horasTrabajadas + 'h ' + registro.minutosTrabajadosRestantes + 'm' + 
+                                    '</div>';
                     } else {
                         clases += ' normal';
                     }
@@ -2156,8 +2170,7 @@ try {
         
         doc.setFontSize(10);
         doc.setTextColor(255, 255, 255);
-        doc.text('Horas extra: ' + horasExtra + 'h ' + minutosExtra + 'min', 20, yPos + 2);
-        doc.text('Horas trabajadas: ' + horasTrabajadas + 'h ' + minutosTrabajadas + 'min', 85, yPos + 2);
+        doc.text('Horas trabajadas: ' + horasTrabajadas + 'h ' + minutosTrabajadas + 'min', 20, yPos + 2);
         
         if (totalImporte > 0) {
             doc.text('Total: ' + totalImporte.toFixed(2) + ' EUR', 155, yPos + 2);
@@ -2252,10 +2265,10 @@ try {
                     doc.setFont(undefined, 'bold');
                     doc.text(String(dia), x + (cellSize / 2), y + 8, { align: 'center' });
                     
-                    // Horas extra
+                    // Horas trabajadas
                     doc.setFontSize(6);
                     doc.setFont(undefined, 'normal');
-                    doc.text(registro.horasExtra + 'h ' + registro.minutosExtra + 'm', x + (cellSize / 2), y + cellSize - 5, { align: 'center' });
+                    doc.text(registro.horasTrabajadas + 'h ' + registro.minutosTrabajadosRestantes + 'm', x + (cellSize / 2), y + cellSize - 5, { align: 'center' });
                 } else {
                     // Día no trabajado - gris claro
                     doc.setFillColor(245, 245, 245);
@@ -2295,11 +2308,9 @@ try {
         // Cabecera de tabla
         doc.setFillColor(240, 240, 240);
         doc.rect(15, yPos - 4, 180, 6, 'F');
-        doc.text('Fecha', 17, yPos);
-        doc.text('Horarios', 55, yPos);
-        doc.text('Contractual', 110, yPos);
-        doc.text('Trabajadas', 145, yPos);
-        doc.text('Extra', 175, yPos);
+        doc.text('Fecha', 20, yPos);
+        doc.text('Horarios', 70, yPos);
+        doc.text('Horas Trabajadas', 145, yPos);
         yPos += 6;
         
         // Registros
@@ -2326,23 +2337,51 @@ try {
             }
             
             doc.setTextColor(60, 60, 60);
-            doc.text(fechaStr, 17, yPos);
+            doc.text(fechaStr, 20, yPos);
             
             // Periodos
-            var periodosTexto = periodos.length > 35 ? periodos.substring(0, 32) + '...' : periodos;
-            doc.text(periodosTexto, 55, yPos);
-            
-            doc.text(r.horasContractuales + 'h ' + r.minutosContractuales + 'm', 110, yPos);
-            doc.text(r.horasTrabajadas + 'h ' + r.minutosTrabajadosRestantes + 'm', 145, yPos);
+            var periodosTexto = periodos.length > 50 ? periodos.substring(0, 47) + '...' : periodos;
+            doc.text(periodosTexto, 70, yPos);
             
             doc.setTextColor(29, 209, 161);
-            doc.text(r.horasExtra + 'h ' + r.minutosExtra + 'm', 175, yPos);
+            doc.setFont(undefined, 'bold');
+            doc.text(r.horasTrabajadas + 'h ' + r.minutosTrabajadosRestantes + 'm', 145, yPos);
+            doc.setFont(undefined, 'normal');
             
             yPos += 5;
         });
         
         yPos += 10;
     });
+    
+    // TOTAL GENERAL DE HORAS TRABAJADAS
+    if (yPos > 260) {
+        doc.addPage();
+        yPos = 20;
+    }
+    
+    // Calcular total general
+    var totalMinutosGeneralTrabajados = 0;
+    historialFiltrado.forEach(function(r) {
+        totalMinutosGeneralTrabajados += (r.horasTrabajadas * 60 + r.minutosTrabajadosRestantes);
+    });
+    
+    var totalHorasGenerales = Math.floor(totalMinutosGeneralTrabajados / 60);
+    var totalMinutosGenerales = totalMinutosGeneralTrabajados % 60;
+    
+    // Dibujar caja de total
+    yPos += 10;
+    doc.setFillColor(102, 126, 234);
+    doc.roundedRect(15, yPos - 5, 180, 20, 3, 3, 'F');
+    
+    doc.setFontSize(14);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(undefined, 'bold');
+    doc.text('TOTAL GENERAL', 105, yPos + 3, { align: 'center' });
+    
+    doc.setFontSize(18);
+    doc.text(totalHorasGenerales + 'h ' + totalMinutosGenerales + 'min', 105, yPos + 12, { align: 'center' });
+    doc.setFont(undefined, 'normal');
     
     // Generar nombre de archivo
     var nombreArchivo = 'calendario_horas';
@@ -2362,7 +2401,7 @@ try {
     console.error('Error exportar PDF:', e);
     mostrarAlerta('❌ Error al generar PDF: ' + e.message);
 }
-
+```
 
 }
 </script>
