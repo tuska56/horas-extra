@@ -1525,18 +1525,8 @@
                     if (registro) {
                         clases += ' trabajado';
                         
-                        // Mostrar horarios
-                        var horarios = registro.periodos.map(function(p) {
-                            return p.inicio + '-' + p.fin;
-                        }).join(', ');
-                        
-                        // Limitar longitud si es muy largo
-                        if (horarios.length > 15) {
-                            horarios = horarios.substring(0, 12) + '...';
-                        }
-                        
-                        horasExtra = '<div class="calendario-horas" style="font-size: 7px; line-height: 1.2;">' + 
-                                    horarios + '<br>' + 
+                        // Solo mostrar horas trabajadas
+                        horasExtra = '<div class="calendario-horas">' + 
                                     registro.horasTrabajadas + 'h ' + registro.minutosTrabajadosRestantes + 'm' + 
                                     '</div>';
                     } else {
@@ -2260,12 +2250,26 @@ try {
                     doc.setFontSize(10);
                     doc.setTextColor(255, 255, 255);
                     doc.setFont(undefined, 'bold');
-                    doc.text(String(dia), x + (cellSize / 2), y + 8, { align: 'center' });
+                    doc.text(String(dia), x + (cellSize / 2), y + 7, { align: 'center' });
+                    
+                    // Horarios - mostrar primeros periodos
+                    var horarios = registro.periodos.map(function(p) {
+                        return p.inicio.substring(0, 5) + '-' + p.fin.substring(0, 5);
+                    }).join(' ');
+                    
+                    // Limitar a 20 caracteres para que quepa
+                    if (horarios.length > 20) {
+                        horarios = horarios.substring(0, 17) + '...';
+                    }
+                    
+                    doc.setFontSize(5);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(horarios, x + (cellSize / 2), y + 13, { align: 'center' });
                     
                     // Horas trabajadas
                     doc.setFontSize(6);
-                    doc.setFont(undefined, 'normal');
-                    doc.text(registro.horasTrabajadas + 'h ' + registro.minutosTrabajadosRestantes + 'm', x + (cellSize / 2), y + cellSize - 5, { align: 'center' });
+                    doc.setFont(undefined, 'bold');
+                    doc.text(registro.horasTrabajadas + 'h ' + registro.minutosTrabajadosRestantes + 'm', x + (cellSize / 2), y + cellSize - 4, { align: 'center' });
                 } else {
                     // Día no trabajado - gris claro
                     doc.setFillColor(245, 245, 245);
