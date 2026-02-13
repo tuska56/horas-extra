@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 
 <html lang="es">
 <head>
@@ -2044,203 +2044,329 @@
     }
 
     function exportarCalendarioPDF() {
-        try {
-            // Verificar que jsPDF esté disponible
-            if (typeof window.jspdf === 'undefined') {
-                mostrarAlerta('❌ Error: Librería PDF no cargada. Recarga la página.');
-                return;
-            }
-
-            var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
-            
-            if (historial.length === 0) {
-                mostrarAlerta('❌ No hay registros para exportar');
-                return;
-            }
-            
-            var fechaDesde = document.getElementById('fechaDesde').value;
-            var fechaHasta = document.getElementById('fechaHasta').value;
-            var filtroEmpleado = document.getElementById('filtroEmpleado').value;
-            
-            var historialFiltrado = historial;
-            
-            if (filtroEmpleado) {
-                historialFiltrado = historialFiltrado.filter(function(item) {
-                    return item.nombreEmpleado === filtroEmpleado;
-                });
-            }
-            
-            if (fechaDesde) {
-                historialFiltrado = historialFiltrado.filter(function(item) {
-                    return item.fechaTrabajo >= fechaDesde;
-                });
-            }
-            
-            if (fechaHasta) {
-                historialFiltrado = historialFiltrado.filter(function(item) {
-                    return item.fechaTrabajo <= fechaHasta;
-                });
-            }
-            
-            if (historialFiltrado.length === 0) {
-                mostrarAlerta('❌ No hay registros con los filtros seleccionados');
-                return;
-            }
-            
-            // Crear PDF
-            var jsPDF = window.jspdf.jsPDF;
-            var doc = new jsPDF();
-            
-            // Título
-            doc.setFontSize(18);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Calendario de Horas Trabajadas', 105, 15, { align: 'center' });
-            
-            // Fecha de generación
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            var fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-            doc.text('Generado el: ' + fechaHoy, 105, 22, { align: 'center' });
-            
-            var yPos = 35;
-            
-            // Agrupar por empleado
-            var empleados = {};
-            historialFiltrado.forEach(function(item) {
-                if (!empleados[item.nombreEmpleado]) {
-                    empleados[item.nombreEmpleado] = [];
-                }
-                empleados[item.nombreEmpleado].push(item);
-            });
-            
-            var nombresEmpleados = Object.keys(empleados).sort();
-            
-            nombresEmpleados.forEach(function(nombreEmpleado) {
-                var registros = empleados[nombreEmpleado];
-                
-                // Ordenar por fecha
-                registros.sort(function(a, b) {
-                    return a.fechaTrabajo.localeCompare(b.fechaTrabajo);
-                });
-                
-                // Calcular totales
-                var totalMinutosExtra = 0;
-                var totalMinutosTrabajados = 0;
-                var totalImporte = 0;
-                
-                registros.forEach(function(r) {
-                    totalMinutosExtra += r.totalMinutosExtra;
-                    totalMinutosTrabajados += (r.horasTrabajadas * 60 + r.minutosTrabajadosRestantes);
-                    totalImporte += (r.importeTotal || 0);
-                });
-                
-                var horasExtra = Math.floor(totalMinutosExtra / 60);
-                var minutosExtra = totalMinutosExtra % 60;
-                
-                var horasTrabajadas = Math.floor(totalMinutosTrabajados / 60);
-                var minutosTrabajadas = totalMinutosTrabajados % 60;
-                
-                // Nueva página si no hay espacio
-                if (yPos > 250) {
-                    doc.addPage();
-                    yPos = 20;
-                }
-                
-                // Nombre del empleado
-                doc.setFontSize(14);
-                doc.setTextColor(29, 209, 161);
-                doc.text(nombreEmpleado, 15, yPos);
-                yPos += 7;
-                
-                // Totales
-                doc.setFontSize(10);
-                doc.setTextColor(50, 50, 50);
-                doc.text('Horas extra: ' + horasExtra + 'h ' + minutosExtra + 'min', 15, yPos);
-                doc.text('Horas trabajadas: ' + horasTrabajadas + 'h ' + minutosTrabajadas + 'min', 90, yPos);
-                
-                if (totalImporte > 0) {
-                    doc.text('Total: ' + totalImporte.toFixed(2) + ' euros', 160, yPos);
-                }
-                
-                yPos += 8;
-                
-                // Tabla de días
-                doc.setFontSize(9);
-                doc.setTextColor(80, 80, 80);
-                
-                // Cabecera de tabla
-                doc.setFillColor(240, 240, 240);
-                doc.rect(15, yPos - 4, 180, 6, 'F');
-                doc.text('Fecha', 17, yPos);
-                doc.text('Horarios', 55, yPos);
-                doc.text('Contractual', 110, yPos);
-                doc.text('Trabajadas', 145, yPos);
-                doc.text('Extra', 175, yPos);
-                yPos += 6;
-                
-                // Registros
-                registros.forEach(function(r, idx) {
-                    if (yPos > 280) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-                    
-                    var fecha = new Date(r.fechaTrabajo + 'T00:00:00');
-                    var fechaStr = fecha.toLocaleDateString('es-ES', { 
-                        day: '2-digit', 
-                        month: 'short'
-                    });
-                    
-                    var periodos = r.periodos.map(function(p) {
-                        return p.inicio + '-' + p.fin + (p.diaSiguiente ? '(+1)' : '');
-                    }).join(', ');
-                    
-                    // Alternar color de fondo
-                    if (idx % 2 === 0) {
-                        doc.setFillColor(250, 250, 250);
-                        doc.rect(15, yPos - 4, 180, 5, 'F');
-                    }
-                    
-                    doc.setTextColor(60, 60, 60);
-                    doc.text(fechaStr, 17, yPos);
-                    
-                    // Periodos (puede ser largo, acortar si es necesario)
-                    var periodosTexto = periodos.length > 35 ? periodos.substring(0, 32) + '...' : periodos;
-                    doc.text(periodosTexto, 55, yPos);
-                    
-                    doc.text(r.horasContractuales + 'h ' + r.minutosContractuales + 'm', 110, yPos);
-                    doc.text(r.horasTrabajadas + 'h ' + r.minutosTrabajadosRestantes + 'm', 145, yPos);
-                    
-                    doc.setTextColor(29, 209, 161);
-                    doc.text(r.horasExtra + 'h ' + r.minutosExtra + 'm', 175, yPos);
-                    
-                    yPos += 5;
-                });
-                
-                yPos += 10;
-            });
-            
-            // Generar nombre de archivo
-            var nombreArchivo = 'calendario_horas';
-            if (filtroEmpleado) {
-                nombreArchivo += '_' + filtroEmpleado.replace(/\s/g, '_');
-            }
-            if (fechaDesde && fechaHasta) {
-                nombreArchivo += '_' + fechaDesde + '_a_' + fechaHasta;
-            }
-            nombreArchivo += '.pdf';
-            
-            // Descargar
-            doc.save(nombreArchivo);
-            mostrarAlerta('✅ PDF generado correctamente', 'success');
-            
-        } catch(e) {
-            console.error('Error exportar PDF:', e);
-            mostrarAlerta('❌ Error al generar PDF: ' + e.message);
-        }
+try {
+    if (typeof window.jspdf === 'undefined') {
+        mostrarAlerta('❌ Error: Librería PDF no cargada. Recarga la página.');
+        return;
     }
-</script>
+
+    var historial = JSON.parse(localStorage.getItem('historialHorasExtra') || '[]');
+    
+    if (historial.length === 0) {
+        mostrarAlerta('❌ No hay registros para exportar');
+        return;
+    }
+    
+    var fechaDesde = document.getElementById('fechaDesde').value;
+    var fechaHasta = document.getElementById('fechaHasta').value;
+    var filtroEmpleado = document.getElementById('filtroEmpleado').value;
+    
+    var historialFiltrado = historial;
+    
+    if (filtroEmpleado) {
+        historialFiltrado = historialFiltrado.filter(function(item) {
+            return item.nombreEmpleado === filtroEmpleado;
+        });
+    }
+    
+    if (fechaDesde) {
+        historialFiltrado = historialFiltrado.filter(function(item) {
+            return item.fechaTrabajo >= fechaDesde;
+        });
+    }
+    
+    if (fechaHasta) {
+        historialFiltrado = historialFiltrado.filter(function(item) {
+            return item.fechaTrabajo <= fechaHasta;
+        });
+    }
+    
+    if (historialFiltrado.length === 0) {
+        mostrarAlerta('❌ No hay registros con los filtros seleccionados');
+        return;
+    }
+    
+    // Crear PDF
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF();
+    
+    // Título
+    doc.setFontSize(18);
+    doc.setTextColor(102, 126, 234);
+    doc.text('Calendario de Horas Trabajadas', 105, 15, { align: 'center' });
+    
+    // Fecha de generación
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    var fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    doc.text('Generado el: ' + fechaHoy, 105, 22, { align: 'center' });
+    
+    var yPos = 35;
+    
+    // Agrupar por empleado
+    var empleados = {};
+    historialFiltrado.forEach(function(item) {
+        if (!empleados[item.nombreEmpleado]) {
+            empleados[item.nombreEmpleado] = [];
+        }
+        empleados[item.nombreEmpleado].push(item);
+    });
+    
+    var nombresEmpleados = Object.keys(empleados).sort();
+    
+    nombresEmpleados.forEach(function(nombreEmpleado, empleadoIdx) {
+        var registros = empleados[nombreEmpleado];
+        
+        // Si no es el primer empleado, nueva página
+        if (empleadoIdx > 0) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        // Ordenar por fecha
+        registros.sort(function(a, b) {
+            return a.fechaTrabajo.localeCompare(b.fechaTrabajo);
+        });
+        
+        // Calcular totales
+        var totalMinutosExtra = 0;
+        var totalMinutosTrabajados = 0;
+        var totalImporte = 0;
+        
+        registros.forEach(function(r) {
+            totalMinutosExtra += r.totalMinutosExtra;
+            totalMinutosTrabajados += (r.horasTrabajadas * 60 + r.minutosTrabajadosRestantes);
+            totalImporte += (r.importeTotal || 0);
+        });
+        
+        var horasExtra = Math.floor(totalMinutosExtra / 60);
+        var minutosExtra = totalMinutosExtra % 60;
+        
+        var horasTrabajadas = Math.floor(totalMinutosTrabajados / 60);
+        var minutosTrabajadas = totalMinutosTrabajados % 60;
+        
+        // Nombre del empleado
+        doc.setFontSize(16);
+        doc.setTextColor(29, 209, 161);
+        doc.text(nombreEmpleado, 15, yPos);
+        yPos += 8;
+        
+        // Totales en caja
+        doc.setFillColor(29, 209, 161);
+        doc.roundedRect(15, yPos - 5, 180, 14, 2, 2, 'F');
+        
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.text('Horas extra: ' + horasExtra + 'h ' + minutosExtra + 'min', 20, yPos + 2);
+        doc.text('Horas trabajadas: ' + horasTrabajadas + 'h ' + minutosTrabajadas + 'min', 85, yPos + 2);
+        
+        if (totalImporte > 0) {
+            doc.text('Total: ' + totalImporte.toFixed(2) + ' EUR', 155, yPos + 2);
+        }
+        
+        yPos += 18;
+        
+        // CALENDARIOS VISUALES POR MES
+        var registrosPorMes = {};
+        
+        registros.forEach(function(r) {
+            var fecha = new Date(r.fechaTrabajo + 'T00:00:00');
+            var mesKey = fecha.getFullYear() + '-' + String(fecha.getMonth() + 1).padStart(2, '0');
+            
+            if (!registrosPorMes[mesKey]) {
+                registrosPorMes[mesKey] = {
+                    year: fecha.getFullYear(),
+                    month: fecha.getMonth(),
+                    registros: {}
+                };
+            }
+            
+            var dia = fecha.getDate();
+            registrosPorMes[mesKey].registros[dia] = r;
+        });
+        
+        var meses = Object.keys(registrosPorMes).sort();
+        
+        meses.forEach(function(mesKey, mesIdx) {
+            var mesData = registrosPorMes[mesKey];
+            
+            // Verificar espacio para calendario
+            if (yPos > 220) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            var nombreMes = new Date(mesData.year, mesData.month, 1).toLocaleDateString('es-ES', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            // Título del mes
+            doc.setFontSize(12);
+            doc.setTextColor(102, 126, 234);
+            doc.text(nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1), 15, yPos);
+            yPos += 6;
+            
+            // Dibujar calendario
+            var calendarioX = 15;
+            var calendarioY = yPos;
+            var cellSize = 23;
+            var cellPadding = 2;
+            
+            // Días de la semana
+            var diasNombres = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            
+            for (var i = 0; i < 7; i++) {
+                var x = calendarioX + (i * cellSize) + (cellSize / 2);
+                doc.text(diasNombres[i], x, calendarioY, { align: 'center' });
+            }
+            
+            calendarioY += 5;
+            
+            // Calcular días del mes
+            var primerDia = new Date(mesData.year, mesData.month, 1);
+            var diaSemana = primerDia.getDay();
+            diaSemana = diaSemana === 0 ? 6 : diaSemana - 1;
+            
+            var ultimoDia = new Date(mesData.year, mesData.month + 1, 0).getDate();
+            
+            var row = 0;
+            var col = diaSemana;
+            
+            for (var dia = 1; dia <= ultimoDia; dia++) {
+                var x = calendarioX + (col * cellSize);
+                var y = calendarioY + (row * cellSize);
+                
+                var registro = mesData.registros[dia];
+                
+                // Dibujar celda
+                if (registro) {
+                    // Día trabajado - verde
+                    doc.setFillColor(29, 209, 161);
+                    doc.roundedRect(x, y, cellSize - cellPadding, cellSize - cellPadding, 2, 2, 'F');
+                    
+                    // Número del día
+                    doc.setFontSize(10);
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(String(dia), x + (cellSize / 2), y + 8, { align: 'center' });
+                    
+                    // Horas extra
+                    doc.setFontSize(6);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(registro.horasExtra + 'h ' + registro.minutosExtra + 'm', x + (cellSize / 2), y + cellSize - 5, { align: 'center' });
+                } else {
+                    // Día no trabajado - gris claro
+                    doc.setFillColor(245, 245, 245);
+                    doc.roundedRect(x, y, cellSize - cellPadding, cellSize - cellPadding, 2, 2, 'F');
+                    
+                    // Número del día
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 180, 180);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(String(dia), x + (cellSize / 2), y + 8, { align: 'center' });
+                }
+                
+                col++;
+                if (col > 6) {
+                    col = 0;
+                    row++;
+                }
+            }
+            
+            yPos = calendarioY + ((row + 1) * cellSize) + 10;
+        });
+        
+        // Tabla detallada
+        if (yPos > 230) {
+            doc.addPage();
+            yPos = 20;
+        }
+        
+        doc.setFontSize(11);
+        doc.setTextColor(102, 126, 234);
+        doc.text('Detalle de registros', 15, yPos);
+        yPos += 6;
+        
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        
+        // Cabecera de tabla
+        doc.setFillColor(240, 240, 240);
+        doc.rect(15, yPos - 4, 180, 6, 'F');
+        doc.text('Fecha', 17, yPos);
+        doc.text('Horarios', 55, yPos);
+        doc.text('Contractual', 110, yPos);
+        doc.text('Trabajadas', 145, yPos);
+        doc.text('Extra', 175, yPos);
+        yPos += 6;
+        
+        // Registros
+        registros.forEach(function(r, idx) {
+            if (yPos > 280) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            var fecha = new Date(r.fechaTrabajo + 'T00:00:00');
+            var fechaStr = fecha.toLocaleDateString('es-ES', { 
+                day: '2-digit', 
+                month: 'short'
+            });
+            
+            var periodos = r.periodos.map(function(p) {
+                return p.inicio + '-' + p.fin + (p.diaSiguiente ? '(+1)' : '');
+            }).join(', ');
+            
+            // Alternar color de fondo
+            if (idx % 2 === 0) {
+                doc.setFillColor(250, 250, 250);
+                doc.rect(15, yPos - 4, 180, 5, 'F');
+            }
+            
+            doc.setTextColor(60, 60, 60);
+            doc.text(fechaStr, 17, yPos);
+            
+            // Periodos
+            var periodosTexto = periodos.length > 35 ? periodos.substring(0, 32) + '...' : periodos;
+            doc.text(periodosTexto, 55, yPos);
+            
+            doc.text(r.horasContractuales + 'h ' + r.minutosContractuales + 'm', 110, yPos);
+            doc.text(r.horasTrabajadas + 'h ' + r.minutosTrabajadosRestantes + 'm', 145, yPos);
+            
+            doc.setTextColor(29, 209, 161);
+            doc.text(r.horasExtra + 'h ' + r.minutosExtra + 'm', 175, yPos);
+            
+            yPos += 5;
+        });
+        
+        yPos += 10;
+    });
+    
+    // Generar nombre de archivo
+    var nombreArchivo = 'calendario_horas';
+    if (filtroEmpleado) {
+        nombreArchivo += '_' + filtroEmpleado.replace(/\s/g, '_');
+    }
+    if (fechaDesde && fechaHasta) {
+        nombreArchivo += '_' + fechaDesde + '_a_' + fechaHasta;
+    }
+    nombreArchivo += '.pdf';
+    
+    // Descargar
+    doc.save(nombreArchivo);
+    mostrarAlerta('✅ PDF generado correctamente', 'success');
+    
+} catch(e) {
+    console.error('Error exportar PDF:', e);
+    mostrarAlerta('❌ Error al generar PDF: ' + e.message);
+}
 ```
+
+}
+</script>
 
 </body>
 </html>
